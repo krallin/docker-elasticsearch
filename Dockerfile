@@ -18,7 +18,13 @@ RUN apt-get -y install wget && cd /tmp && \
     mv /tmp/elasticsearch-1.3.2 /elasticsearch && rm -rf elasticsearch-132
 
 # Mount elasticsearch.yml config
-ADD templates/config/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
+ADD templates/elasticsearch.yml /elasticsearch/config/elasticsearch.yml
+
+# Install NGiNX
+RUN add-apt-repository -y ppa:nginx/stable && apt-get update && \
+    apt-get -y install nginx && mkdir -p /etc/nginx/ssl
+ADD templates/nginx.conf /etc/nginx/nginx.conf
+ADD templates/nginx-wrapper /usr/sbin/nginx-wrapper
 
 # Integration tests
 ADD test /tmp/test
@@ -26,7 +32,7 @@ RUN bats /tmp/test
 
 VOLUME ["/data"]
 
-# Expose HTTP port only
-EXPOSE 9200
+# Expose NGiNX proxy ports
+EXPOSE 80 443
 
-CMD ["/elasticsearch/bin/elasticsearch"]
+CMD ["/usr/sbin/nginx-wrapper"]

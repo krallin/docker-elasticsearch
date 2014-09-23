@@ -1,0 +1,12 @@
+#!/bin/sh
+
+SSL_ROOT=/etc/nginx/ssl
+SUBJ="/C=US/ST=New York/L=New York/O=Example/CN=elasticsearch.example.com"
+if [ ! -f $SSL_ROOT/server.crt ] && [ ! -f $SSL_ROOT/server.key ]; then
+  cd $SSL_ROOT
+  OPTS="req -nodes -new -x509 -sha256"
+  openssl $OPTS -subj "$SUBJ" -keyout server.key -out server.crt 2> /dev/null
+fi
+
+/elasticsearch/bin/elasticsearch &
+/usr/sbin/nginx $@
