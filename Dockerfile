@@ -26,6 +26,9 @@ RUN add-apt-repository -y ppa:nginx/stable && apt-get update && \
 ADD templates/nginx.conf /etc/nginx/nginx.conf
 ADD templates/nginx-wrapper /usr/sbin/nginx-wrapper
 
+# Install htpasswd for HTTP Basic Auth
+RUN apt-get -y install apache2-utils
+
 # Integration tests
 ADD test /tmp/test
 RUN bats /tmp/test
