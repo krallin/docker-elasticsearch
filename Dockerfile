@@ -36,6 +36,6 @@ RUN bats /tmp/test
 VOLUME ["/data"]
 
 # Expose NGiNX proxy ports
-EXPOSE 80 443
+EXPOSE 80
 
 CMD ["/usr/sbin/nginx-wrapper"]
