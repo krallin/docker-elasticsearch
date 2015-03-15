@@ -1,5 +1,5 @@
 path:
-  data: /data/data
-  logs: /data/log
-  plugins: /data/plugins
-  work: /data/work
+  data: /var/db/data
+  logs: /var/db/log
+  plugins: /var/db/plugins
+  work: /var/db/work
