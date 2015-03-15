@@ -8,8 +8,9 @@ if [ ! -f $SSL_ROOT/server.crt ] && [ ! -f $SSL_ROOT/server.key ]; then
   openssl $OPTS -subj "$SUBJ" -keyout server.key -out server.crt 2> /dev/null
 fi
 
-if [ -n "$PASSWORD" ] && [ -n "$USERNAME" ]; then
-  htpasswd -b -c /etc/nginx/auth_basic.htpasswd $USERNAME $PASSWORD
+AUTH_FILE="$DATA_DIRECTORY"/auth_basic.htpasswd
+if [ -f "$AUTH_FILE" ]; then
+  ln -sf "$AUTH_FILE" /etc/nginx
   sed -i 's/\# auth_basic/auth_basic/' /etc/nginx/nginx.conf
 fi
 

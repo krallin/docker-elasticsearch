@@ -1,5 +1,6 @@
 FROM quay.io/aptible/ubuntu:14.04
 
+ENV DATA_DIRECTORY /var/db
 RUN apt-get update
 
 # Taken from dockerfile/java:oracle-java7
@@ -29,13 +30,15 @@ ADD templates/nginx-wrapper /usr/sbin/nginx-wrapper
 # Install htpasswd for HTTP Basic Auth
 RUN apt-get -y install apache2-utils
 
+ADD run-database.sh /usr/bin/
+
 # Integration tests
 ADD test /tmp/test
 RUN bats /tmp/test
 
-VOLUME ["/data"]
+VOLUME ["$DATA_DIRECTORY"]
 
 # Expose NGiNX proxy ports
 EXPOSE 80
 
-CMD ["/usr/sbin/nginx-wrapper"]
+ENTRYPOINT ["run-database.sh"]
