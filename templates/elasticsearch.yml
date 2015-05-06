@@ -4,4 +4,5 @@ path:
   logs: /var/db/log
   plugins: /var/db/plugins
   work: /var/db/work
-
+http.cors.enabled: true
+http.cors.allow-origin: "/.*/"
