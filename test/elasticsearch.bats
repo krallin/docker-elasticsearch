@@ -45,3 +45,13 @@ teardown() {
   [ "$status" -ne "0" ]
   ! [[ "$output" =~ "tagline"  ]]
 }
+
+@test "It should disable multicast cluster discovery in config" {
+  run grep "discovery.zen.ping.multicast.enabled" elasticsearch/config/elasticsearch.yml
+  [[ "$output" =~ "false" ]]
+}
+
+@test "It should not send multicast discover ping requests" {
+  run timeout 5 /elasticsearch/bin/elasticsearch -Des.logger.discovery=TRACE
+  ! [[ "$output" =~ "sending ping request" ]]
+}
