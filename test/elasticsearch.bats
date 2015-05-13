@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 
-@test "It should install Elasticsearch 1.3.2" {
+@test "It should install Elasticsearch 1.5.2" {
   run /elasticsearch/bin/elasticsearch -v
-  [[ "$output" =~ "Version: 1.3.2"  ]]
+  [[ "$output" =~ "Version: 1.5.2"  ]]
 }
 
 wait_for_elasticsearch() {
@@ -11,9 +11,9 @@ wait_for_elasticsearch() {
 }
 
 teardown() {
-  PID=$(pgrep java)
-  pkill java
-  pkill nginx
+  PID=$(pgrep java) || return 0
+  run pkill java
+  run pkill nginx
   while [ -n "$PID" ] && [ -e /proc/$PID ]; do sleep 0.1; done
 }
 
