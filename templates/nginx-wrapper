@@ -14,5 +14,9 @@ if [ -f "$AUTH_FILE" ]; then
   sed -i 's/\# auth_basic/auth_basic/' /etc/nginx/nginx.conf
 fi
 
+if [ -n "$READONLY" ]; then
+  sed -i 's/\#RO //g' /etc/nginx/nginx.conf
+fi
+
 /elasticsearch/bin/elasticsearch &
 /usr/sbin/nginx $@
