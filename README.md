@@ -6,13 +6,14 @@ Elasticsearch on Docker.
 ## Installation and Usage
 
     docker pull quay.io/aptible/elasticsearch
-    docker run quay.io/aptible/elasticsearch
 
-## Advanced Usage
+This is an image conforming to the [Aptible database specification](https://support.aptible.com/topics/paas/deploy-custom-database/). To run a server for development purposes, execute
 
-### Creating a database user with password
+    docker create --name data quay.io/aptible/elasticsearch
+    docker run --volumes-from data -e USERNAME=aptible -e PASSPHRASE=pass -e DB=db quay.io/aptible/elasticsearch --initialize
+    docker run --volumes-from data -P quay.io/aptible/elasticsearch
 
-`TODO`
+The first command sets up a data container named `data` which will hold the configuration and data for the database. The second command creates an ElasticSearch instance with a username, passphrase and database name of your choice. The third command starts the database server.
 
 ## Available Tags
 
@@ -34,4 +35,4 @@ To push the Docker image to Quay, run the following command:
 
 MIT License, see [LICENSE](LICENSE.md) for details.
 
-Copyright (c) 2014 [Aptible](https://www.aptible.com), [Frank Macreery](https://github.com/fancyremarker), and contributors.
+Copyright (c) 2015 [Aptible](https://www.aptible.com), [Frank Macreery](https://github.com/fancyremarker), and contributors.
