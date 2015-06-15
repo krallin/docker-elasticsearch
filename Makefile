@@ -1,6 +1,6 @@
 DOCKER = docker
 REPO = git@github.com:aptible/docker-elasticsearch.git
-TAGS = 1.5.2
+TAGS = 1.5
 
 all: release
 

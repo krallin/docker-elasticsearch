@@ -1,6 +1,8 @@
 # ![](https://gravatar.com/avatar/11d3bc4c3163e3d238d558d5c9d98efe?s=64) aptible/elasticsearch
 [![Docker Repository on Quay.io](https://quay.io/repository/aptible/elasticsearch/status)](https://quay.io/repository/aptible/elasticsearch)
 
+[![](http://dockeri.co/image/aptible/elasticsearch)](https://registry.hub.docker.com/u/aptible/elasticsearch/)
+
 Elasticsearch on Docker.
 
 ## Installation and Usage
@@ -18,7 +20,7 @@ The first command sets up a data container named `data` which will hold the conf
 ## Available Tags
 
 * `latest`: Currently Elasticsearch 1.5.2
-* `1.5.2`: Elasticsearch 1.5.2
+* `1.5`: Elasticsearch 1.5.2
 
 ## Tests
 
@@ -31,6 +33,12 @@ Tests are run as part of the `Dockerfile` build. To execute them separately with
 To push the Docker image to Quay, run the following command:
 
     make release
+
+## Continuous Integration
+
+Images are built and pushed to Docker Hub on every deploy. Because Quay currently only supports build triggers where the Docker tag name exactly matches a GitHub branch/tag name, we must run the following script to synchronize all our remote branches after a merge to master:
+
+    make sync-branches
 
 ## Copyright and License
 
