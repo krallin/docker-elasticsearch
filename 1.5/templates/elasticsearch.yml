@@ -2,7 +2,7 @@ discovery.zen.ping.multicast.enabled: false
 path:
   data: /var/db/data
   logs: /var/db/log
-  plugins: /var/db/plugins
+  plugins: /elasticsearch/plugins
   work: /var/db/work
 http.cors.enabled: true
 http.cors.allow-origin: "/.*/"
