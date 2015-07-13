@@ -55,3 +55,7 @@ teardown() {
   run timeout 5 /elasticsearch/bin/elasticsearch -Des.logger.discovery=TRACE
   ! [[ "$output" =~ "sending ping request" ]]
 }
+
+@test "It should have the cloud-aws plugin installed" {
+  /elasticsearch/bin/plugin --list | grep -q "cloud-aws"
+}

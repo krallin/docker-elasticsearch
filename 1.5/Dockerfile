@@ -18,6 +18,10 @@ RUN apt-get -y install wget && cd /tmp && \
     wget http://bit.ly/elasticsearch-152 && tar xvzf elasticsearch-152 && \
     mv /tmp/elasticsearch-1.5.2 /elasticsearch && rm -rf elasticsearch-152
 
+# Install plugins. Note that these versions are tied to the Elasticsearch server
+# version and should change when the server version is upgraded.
+RUN /elasticsearch/bin/plugin install elasticsearch/elasticsearch-cloud-aws/2.5.1
+
 # Install NGiNX
 RUN add-apt-repository -y ppa:nginx/stable && apt-get update && \
     apt-get -y install nginx && mkdir -p /etc/nginx/ssl
