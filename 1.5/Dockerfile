@@ -1,6 +1,7 @@
 FROM quay.io/aptible/ubuntu:14.04
 
 ENV DATA_DIRECTORY /var/db
+ENV SSL_DIRECTORY /etc/nginx/ssl
 RUN apt-get update
 
 # Taken from dockerfile/java:oracle-java7
@@ -50,6 +51,7 @@ ADD test /tmp/test
 RUN bats /tmp/test
 
 VOLUME ["$DATA_DIRECTORY"]
+VOLUME ["$SSL_DIRECTORY"]
 
 # Expose NGiNX proxy ports
 EXPOSE 80
