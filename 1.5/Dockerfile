@@ -55,5 +55,6 @@ VOLUME ["$SSL_DIRECTORY"]
 
 # Expose NGiNX proxy ports
 EXPOSE 80
+EXPOSE 443
 
 ENTRYPOINT ["run-database.sh"]
