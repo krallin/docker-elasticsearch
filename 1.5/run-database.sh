@@ -2,8 +2,9 @@
 
 . /usr/bin/utilities.sh
 
+sed "s:SSL_DIRECTORY:${SSL_DIRECTORY}:g" /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+
 if [[ "$1" == "--initialize" ]]; then
-  sed -i "s:SSL_DIRECTORY:${SSL_DIRECTORY}:g" /etc/nginx/nginx.conf
   htpasswd -b -c "$DATA_DIRECTORY"/auth_basic.htpasswd "${USERNAME:-aptible}" "$PASSPHRASE"
   if [ -n "$SSL_CERTIFICATE" ] && [ -n "$SSL_KEY" ]; then
     echo "$SSL_CERTIFICATE" > "$SSL_DIRECTORY"/server.crt

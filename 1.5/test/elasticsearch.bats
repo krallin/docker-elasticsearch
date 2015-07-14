@@ -6,7 +6,7 @@
 }
 
 wait_for_elasticsearch() {
-  /usr/sbin/nginx-wrapper > $BATS_TEST_DIRNAME/nginx.log &
+  run-database.sh > $BATS_TEST_DIRNAME/nginx.log &
   while  ! grep "started" $BATS_TEST_DIRNAME/nginx.log ; do sleep 0.1; done
 }
 
