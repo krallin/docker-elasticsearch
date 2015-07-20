@@ -1,6 +1,7 @@
 FROM quay.io/aptible/ubuntu:14.04
 
 ENV DATA_DIRECTORY /var/db
+ENV SSL_DIRECTORY /etc/nginx/ssl
 RUN apt-get update
 
 # Taken from dockerfile/java:oracle-java7
@@ -36,7 +37,7 @@ RUN wget -q -O - http://nodejs.org/dist/v0.12.4/node-v0.12.4-linux-x64.tar.gz | 
     ln -s /node-v0.12.4-linux-x64/bin/npm /usr/local/bin/ && \
     npm install -g elasticdump
 
-ADD templates/nginx.conf /etc/nginx/nginx.conf
+ADD templates/nginx.conf.template /etc/nginx/nginx.conf.template
 ADD templates/nginx-wrapper /usr/sbin/nginx-wrapper
 
 # Mount elasticsearch.yml config
@@ -50,8 +51,10 @@ ADD test /tmp/test
 RUN bats /tmp/test
 
 VOLUME ["$DATA_DIRECTORY"]
+VOLUME ["$SSL_DIRECTORY"]
 
 # Expose NGiNX proxy ports
 EXPOSE 80
+EXPOSE 443
 
 ENTRYPOINT ["run-database.sh"]
