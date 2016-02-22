@@ -1,10 +1,5 @@
 #!/usr/bin/env bats
 
-@test "It should install Elasticsearch 1.5.2" {
-  run /elasticsearch/bin/elasticsearch -v
-  [[ "$output" =~ "Version: 1.5.2"  ]]
-}
-
 wait_for_elasticsearch() {
   run-database.sh > $BATS_TEST_DIRNAME/nginx.log &
   while  ! grep "started" $BATS_TEST_DIRNAME/nginx.log ; do sleep 0.1; done
@@ -21,15 +16,32 @@ setup() {
   mkdir -p "$SSL_DIRECTORY"
 }
 
+shutdown_nginx() {
+  NGINX_PID=$(pgrep nginx) || return 0
+  run pkill nginx
+  while [ -n "$NGINX_PID" ] && [ -e "/proc/${NGINX_PID}" ]; do sleep 0.1; done
+}
+
+shutdown_elasticsearch() {
+  JAVA_PID=$(pgrep java) || return 0
+  run pkill java
+  while [ -n "$JAVA_PID" ] && [ -e "/proc/${JAVA_PID}" ]; do sleep 0.1; done
+}
+
 teardown() {
+  shutdown_elasticsearch
+  shutdown_nginx
   export DATA_DIRECTORY="$OLD_DATA_DIRECTORY"
   export SSL_DIRECTORY="$OLD_SSL_DIRECTORY"
   unset OLD_DATA_DIRECTORY
   unset OLD_SSL_DIRECTORY
-  PID=$(pgrep java) || return 0
-  run pkill java
-  run pkill nginx
-  while [ -n "$PID" ] && [ -e /proc/$PID ]; do sleep 0.1; done
+}
+
+@test "It should provide an HTTP wrapper" {
+  wait_for_elasticsearch
+  run wget -qO- http://localhost > /test-output
+  run wget -qO- http://localhost
+  [[ "$output" =~ "tagline"  ]]
 }
 
 @test "It should expose Elasticsearch over HTTP with Basic Auth" {
@@ -75,15 +87,43 @@ teardown() {
 }
 
 @test "It should disable multicast cluster discovery in config" {
-  run grep "discovery.zen.ping.multicast.enabled" elasticsearch/config/elasticsearch.yml
+  USERNAME=aptible PASSPHRASE=password run-database.sh --initialize
+  run grep "discovery.zen.ping.multicast.enabled" /elasticsearch/config/elasticsearch.yml
   [[ "$output" =~ "false" ]]
 }
 
 @test "It should not send multicast discover ping requests" {
+  USERNAME=aptible PASSPHRASE=password run-database.sh --initialize
   run timeout 5 /elasticsearch/bin/elasticsearch -Des.logger.discovery=TRACE
   ! [[ "$output" =~ "sending ping request" ]]
+  ! [[ "$output" =~ "multicast" ]]
 }
 
-@test "It should have the cloud-aws plugin installed" {
-  /elasticsearch/bin/plugin --list | grep -q "cloud-aws"
+@test "It should support compatible --dump and --restore commands" {
+  url="http://aptible:password@localhost"
+  dump="${BATS_TEST_DIRNAME}/dump-file"
+
+  USERNAME=aptible PASSPHRASE=password run-database.sh --initialize
+  wait_for_elasticsearch
+
+  curl -s -XPUT "http://localhost:9200/tests/test/1" -d'{
+    "testId": 1,
+    "testValue": "TEST_VALUE"
+  }'
+  curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
+
+  # We have to repeat the dump a few times, because it originally
+  # comes out empty (most likely a question of timing).
+  until [[ -s "$dump" ]]; do
+    run-database.sh --dump "$url" > "$dump"
+  done
+
+  teardown
+  setup
+
+  USERNAME=aptible PASSPHRASE=password run-database.sh --initialize
+  wait_for_elasticsearch
+
+  run-database.sh --restore "$url" < "$dump"
+  curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
 }
