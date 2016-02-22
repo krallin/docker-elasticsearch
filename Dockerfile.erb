@@ -1,50 +1,52 @@
 FROM quay.io/aptible/ubuntu:14.04
 
-# Taken from dockerfile/java:oracle-java7
-# Accept Oracle license agreement
-RUN echo "oracle-java7-installer shared/accepted-oracle-license-v1-1 " \
-         "select true" | debconf-set-selections
+# Create user early to ensure consistent UID
+ENV ES_USER <%= ENV.fetch 'ES_USER' %>
+ENV ES_GROUP <%= ENV.fetch 'ES_GROUP' %>
+RUN getent group "$ES_GROUP" || groupadd -r "$ES_GROUP"
+RUN getent passwd "$ES_USER" || useradd -r -g "$ES_GROUP" "$ES_USER"
+#
+# Install utilities we'll need
+RUN apt-install software-properties-common apache2-utils sudo curl
 
 # Install Java 7 and clean up
-RUN apt-install software-properties-common && \
+RUN echo "oracle-java7-installer shared/accepted-oracle-license-v1-1 " \
+         "select true" | debconf-set-selections && \
     add-apt-repository -y ppa:webupd8team/java && \
     apt-install oracle-java7-installer
-
-ENV ES_VERSION <%= ENV.fetch 'ES_VERSION' %>
-ENV ES_BACKUP_PLUGIN_NAME <%= ENV.fetch 'ES_BACKUP_PLUGIN_NAME' %>
-ENV ES_BACKUP_PLUGIN_VERSION <%= ENV.fetch 'ES_BACKUP_PLUGIN_VERSION' %>
-
-# Install Elasticsearch and backup plugin.
-RUN apt-install curl && \
-    cd /tmp && \
-    curl "https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz" | tar xzf - && \
-    mv "/tmp/elasticsearch-${ES_VERSION}" /elasticsearch && \
-    /elasticsearch/bin/plugin install "elasticsearch/${ES_BACKUP_PLUGIN_NAME}/${ES_BACKUP_PLUGIN_VERSION}"
 
 # Install NGiNX
 RUN add-apt-repository -y ppa:nginx/stable && \
     apt-install nginx && mkdir -p /etc/nginx/ssl
 
-# Install htpasswd for HTTP Basic Auth
-RUN apt-install apache2-utils
+# Install Elasticsearch and backup plugin.
+ENV ES_VERSION <%= ENV.fetch 'ES_VERSION' %>
+ENV ES_BACKUP_PLUGIN <%= ENV.fetch 'ES_BACKUP_PLUGIN' %>
+RUN cd /tmp && \
+    curl -L "https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz" | tar xzf - && \
+    mv "/tmp/elasticsearch-${ES_VERSION}" /elasticsearch && \
+    /elasticsearch/bin/plugin install <%= '--batch' if ENV.fetch('TAG').start_with? '2.' %> "${ES_BACKUP_PLUGIN}"
 
 # Install node.js and elasticdump tool for --dump/--restore options.
 # https://github.com/taskrabbit/elasticsearch-dump
-# # TODO - seems like this doesn't work with old node anymore
 ENV NODE_VERSION 4.3.1
 ENV ELASTICDUMP_VERSION 1.0.3
-RUN curl "http://nodejs.org/dist/v$NODE_VERSION/node-v${NODE_VERSION}-linux-x64.tar.gz" | tar zxf - && \
+RUN curl -L "http://nodejs.org/dist/v$NODE_VERSION/node-v${NODE_VERSION}-linux-x64.tar.gz" | tar zxf - && \
     ln -s "/node-v${NODE_VERSION}-linux-x64/bin/node" /usr/local/bin/ && \
     ln -s "/node-v${NODE_VERSION}-linux-x64/bin/npm" /usr/local/bin/ && \
     npm install -g "elasticdump@${ELASTICDUMP_VERSION}" && \
     ln -s "/node-v${NODE_VERSION}-linux-x64/bin/elasticdump" /usr/local/bin/
 
-ADD templates/nginx.conf.template /etc/nginx/nginx.conf.template
-ADD templates/nginx-wrapper /usr/sbin/nginx-wrapper
 
-# Mount elasticsearch.yml config template, remove default
+# Configuration templates
+ADD templates/nginx.conf.template /etc/nginx/nginx.conf.template
 ADD templates/elasticsearch.yml.template /elasticsearch/config/elasticsearch.yml.template
+RUN rm /etc/nginx/nginx.conf
 RUN rm /elasticsearch/config/elasticsearch.yml
+
+# Wrappers
+ADD bin/nginx-wrapper /usr/sbin/nginx-wrapper
+ADD bin/elasticsearch-wrapper /usr/bin/elasticsearch-wrapper
 
 ADD bin/run-database.sh /usr/bin/
 ADD bin/utilities.sh /usr/bin/

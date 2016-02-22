@@ -18,6 +18,10 @@ if [[ "$1" == "--initialize" ]]; then
     chmod og-rwx "$SSL_DIRECTORY"/server.key
   fi
 
+  es_dirs=("${DATA_DIRECTORY}/data" "${DATA_DIRECTORY}/log" "${DATA_DIRECTORY}/work" "${DATA_DIRECTORY}/scripts")
+  mkdir -p "${es_dirs[@]}"
+  chown -R "${ES_USER}:${ES_GROUP}" "${es_dirs[@]}"
+
 elif [[ "$1" == "--client" ]]; then
   echo "This image does not support the --client option. Use curl instead." && exit 1
 
