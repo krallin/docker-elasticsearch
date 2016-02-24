@@ -21,21 +21,32 @@ RUN add-apt-repository -y ppa:nginx/stable && \
 
 # Install Elasticsearch and backup plugin.
 ENV ES_VERSION <%= ENV.fetch 'ES_VERSION' %>
+ENV ES_SHA1SUM <%= ENV.fetch 'ES_SHA1SUM' %>
 ENV ES_BACKUP_PLUGIN <%= ENV.fetch 'ES_BACKUP_PLUGIN' %>
-RUN cd /tmp && \
-    curl -L "https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz" | tar xzf - && \
-    mv "/tmp/elasticsearch-${ES_VERSION}" /elasticsearch && \
-    /elasticsearch/bin/plugin install <%= '--batch' if ENV.fetch('TAG').start_with? '2.' %> "${ES_BACKUP_PLUGIN}"
+RUN cd /tmp \
+ && curl -sOL "https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz" \
+ && echo "${ES_SHA1SUM}  elasticsearch-${ES_VERSION}.tar.gz" | sha1sum -c - \
+ && tar xf "elasticsearch-${ES_VERSION}.tar.gz" \
+ && rm "elasticsearch-${ES_VERSION}.tar.gz" \
+ && mv "elasticsearch-${ES_VERSION}" /elasticsearch \
+ && /elasticsearch/bin/plugin install <%= '--batch' if ENV.fetch('TAG').start_with? '2.' %> "${ES_BACKUP_PLUGIN}"
 
 # Install node.js and elasticdump tool for --dump/--restore options.
 # https://github.com/taskrabbit/elasticsearch-dump
 ENV NODE_VERSION 4.3.1
+ENV NODE_SHA1SUM be09c49e82c49dae6945ece09be43abff4379818
+RUN cd /tmp \
+ && curl -sOL "https://nodejs.org/dist/v$NODE_VERSION/node-v${NODE_VERSION}-linux-x64.tar.gz" \
+ && echo "${NODE_SHA1SUM}  node-v${NODE_VERSION}-linux-x64.tar.gz" \
+ && tar xf "node-v${NODE_VERSION}-linux-x64.tar.gz" \
+ && rm "node-v${NODE_VERSION}-linux-x64.tar.gz" \
+ && mv "node-v${NODE_VERSION}-linux-x64" / \
+ && ln -s "/node-v${NODE_VERSION}-linux-x64/bin/node" /usr/local/bin/ \
+ && ln -s "/node-v${NODE_VERSION}-linux-x64/bin/npm" /usr/local/bin/
+
 ENV ELASTICDUMP_VERSION 1.0.3
-RUN curl -L "http://nodejs.org/dist/v$NODE_VERSION/node-v${NODE_VERSION}-linux-x64.tar.gz" | tar zxf - && \
-    ln -s "/node-v${NODE_VERSION}-linux-x64/bin/node" /usr/local/bin/ && \
-    ln -s "/node-v${NODE_VERSION}-linux-x64/bin/npm" /usr/local/bin/ && \
-    npm install -g "elasticdump@${ELASTICDUMP_VERSION}" && \
-    ln -s "/node-v${NODE_VERSION}-linux-x64/bin/elasticdump" /usr/local/bin/
+RUN npm install -g "elasticdump@${ELASTICDUMP_VERSION}" \
+ && ln -s "/node-v${NODE_VERSION}-linux-x64/bin/elasticdump" /usr/local/bin/
 
 
 # Configuration templates
