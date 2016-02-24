@@ -1,5 +1,6 @@
 # ![](https://gravatar.com/avatar/11d3bc4c3163e3d238d558d5c9d98efe?s=64) aptible/elasticsearch
 [![Docker Repository on Quay.io](https://quay.io/repository/aptible/elasticsearch/status)](https://quay.io/repository/aptible/elasticsearch)
+[![Build Status](https://travis-ci.org/aptible/docker-elasticsearch.svg?branch=master)](https://travis-ci.org/aptible/docker-elasticsearch)
 
 [![](http://dockeri.co/image/aptible/elasticsearch)](https://registry.hub.docker.com/u/aptible/elasticsearch/)
 
@@ -15,11 +16,12 @@ This is an image conforming to the [Aptible database specification](https://supp
     docker run --volumes-from data -e USERNAME=aptible -e PASSPHRASE=pass -e DB=db quay.io/aptible/elasticsearch --initialize
     docker run --volumes-from data -P quay.io/aptible/elasticsearch
 
-The first command sets up a data container named `data` which will hold the configuration and data for the database. The second command creates an ElasticSearch instance with a username, passphrase and database name of your choice. The third command starts the database server.
+The first command sets up a data container named `data` which will hold the configuration and data for the database. The second command creates an Elasticsearch instance with a username, passphrase and database name of your choice. The third command starts the database server.
 
 ## Available Tags
 
-* `latest`: Currently Elasticsearch 1.5.2
+* `latest`: Currently Elasticsearch 2.2.0
+* `2.2`: Elasticsearch 2.2.0
 * `1.5`: Elasticsearch 1.5.2
 * `1.3`: Elasticsearch 1.3.2
 
@@ -33,13 +35,12 @@ Tests are run as part of the `Dockerfile` build. To execute them separately with
 
 To push the Docker image to Quay, run the following command:
 
-    make release
+    make push
 
 ## Continuous Integration
 
-Images are built and pushed to Docker Hub on every deploy. Because Quay currently only supports build triggers where the Docker tag name exactly matches a GitHub branch/tag name, we must run the following script to synchronize all our remote branches after a merge to master:
-
-    make sync-branches
+Images are built and pushed to Quay and the Docker Hub on push to master in
+Travis.
 
 ## Copyright and License
 
