@@ -5,8 +5,14 @@ initialize_elasticsearch() {
 }
 
 wait_for_elasticsearch() {
-  run-database.sh > $BATS_TEST_DIRNAME/nginx.log &
-  while  ! grep "started" $BATS_TEST_DIRNAME/nginx.log ; do sleep 0.1; done
+  # We pass the ES_PID via a global variable because we can't rely on
+  # $(wait_for_elasticsearch) as it would result in orpahning the ES process
+  # (which makes us unable to `wait` it).
+  run-database.sh "$@" > $BATS_TEST_DIRNAME/nginx.log 2>&1 &
+  ES_PID="$!"
+  while ! grep -q "started" $BATS_TEST_DIRNAME/nginx.log 2>/dev/null; do
+    sleep 0.1
+  done
 }
 
 setup() {
@@ -132,4 +138,36 @@ teardown() {
 
   run-database.sh --restore "$url" < "$dump"
   curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
+}
+
+@test "It should exit when ES exits (or is killed) and report the exit code" {
+  initialize_elasticsearch
+  wait_for_elasticsearch
+
+  # Check that our PID is valid
+  run ps af --pid "$ES_PID"
+  [[ "$output" =~ "$ES_PID" ]]
+
+  # Check that Java and Nginx are children
+  run ps --ppid "$ES_PID"
+  [[ "$output" =~ "nginx" ]]
+  [[ "$output" =~ "java" ]]
+
+  # Kill ES (emulate a OOM process kill)
+  kill -KILL "$ES_PID"
+
+  # Check that we exited with ES's status code
+  wait "$ES_PID" || exit_code="$?"
+  [[ "$exit_code" -eq "$((128+9))" ]]
+}
+
+@test "It should support --readonly mode" {
+  initialize_elasticsearch
+  wait_for_elasticsearch "--readonly"
+
+  curl "http://aptible:password@localhost"
+
+  run curl --fail -XPOST "http://aptible:password@localhost"
+  [[ "$output" =~ "Forbidden" ]]
+  [[ "$status" -eq 22 ]]  # CURLE_HTTP_RETURNED_ERROR - https://curl.haxx.se/libcurl/c/libcurl-errors.html
 }

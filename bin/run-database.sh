@@ -38,9 +38,7 @@ elif [[ "$1" == "--restore" ]]; then
   elasticdump --bulk=true '--input=$' --output="${protocol:-"https://"}${user}:${password}@${host}:${port:-80}"
 
 elif [[ "$1" == "--readonly" ]]; then
-  READONLY=1 /usr/sbin/nginx-wrapper
-
+  READONLY=1 exec /usr/bin/cluster-wrapper
 else
-  /usr/sbin/nginx-wrapper
-
+  exec /usr/bin/cluster-wrapper
 fi

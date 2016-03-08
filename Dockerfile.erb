@@ -56,7 +56,8 @@ RUN rm /etc/nginx/nginx.conf
 RUN rm /elasticsearch/config/elasticsearch.yml
 
 # Wrappers
-ADD bin/nginx-wrapper /usr/sbin/nginx-wrapper
+ADD bin/cluster-wrapper /usr/bin/cluster-wrapper
+ADD bin/nginx-wrapper /usr/bin/nginx-wrapper
 ADD bin/elasticsearch-wrapper /usr/bin/elasticsearch-wrapper
 
 ADD bin/run-database.sh /usr/bin/
