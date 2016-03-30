@@ -171,3 +171,17 @@ teardown() {
   [[ "$output" =~ "Forbidden" ]]
   [[ "$status" -eq 22 ]]  # CURLE_HTTP_RETURNED_ERROR - https://curl.haxx.se/libcurl/c/libcurl-errors.html
 }
+
+@test "It should support ES_HEAP_SIZE=256m" {
+  initialize_elasticsearch
+  ES_HEAP_SIZE=256m wait_for_elasticsearch
+  run ps auxwww
+  [[ "$output" =~ "-Xms256m -Xmx256m" ]]
+}
+
+@test "It should support ES_HEAP_SIZE=512m" {
+  initialize_elasticsearch
+  ES_HEAP_SIZE=512m wait_for_elasticsearch
+  run ps auxwww
+  [[ "$output" =~ "-Xms512m -Xmx512m" ]]
+}
