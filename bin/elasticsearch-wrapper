@@ -1,2 +1,2 @@
 #!/bin/sh
-exec sudo -u "$ES_USER" /elasticsearch/bin/elasticsearch "$@"
+exec sudo -E -u "$ES_USER" /elasticsearch/bin/elasticsearch "$@"
