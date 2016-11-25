@@ -27,12 +27,24 @@ elif [[ "$1" == "--client" ]]; then
 
 elif [[ "$1" == "--dump" ]]; then
   [ -z "$2" ] && echo "docker run aptible/elasticsearch --dump https://... > dump.es" && exit
+
+  if dpkg --compare-versions "$ES_VERSION" ge 5; then
+    echo "Not supported for Elasticsearch ${ES_VERSION}"
+    exit 1
+  fi
+
   parse_url "$2"
   # shellcheck disable=SC2154
   elasticdump --all=true --input="${protocol:-"https://"}${user}:${password}@${host}:${port:-80}" '--output=$'
 
 elif [[ "$1" == "--restore" ]]; then
   [ -z "$2" ] && echo "docker run -i aptible/elasticsearch --restore https://... < dump.es" && exit
+
+  if dpkg --compare-versions "$ES_VERSION" ge 5; then
+    echo "Not supported for Elasticsearch ${ES_VERSION}"
+    exit 1
+  fi
+
   parse_url "$2"
   # shellcheck disable=SC2154
   elasticdump --bulk=true '--input=$' --output="${protocol:-"https://"}${user}:${password}@${host}:${port:-80}"
