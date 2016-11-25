@@ -32,4 +32,9 @@ if [[ -n "${ES_HEAP_SIZE:-}" ]]; then
   fi
 fi
 
+# ES doesn't need these variables, so we might as well drop them explicitly
+# (sudo will drop them anyway).
+unset SSL_CERTIFICATE
+unset SSL_KEY
+
 exec sudo -E -u "$ES_USER" /elasticsearch/bin/elasticsearch "$@"
