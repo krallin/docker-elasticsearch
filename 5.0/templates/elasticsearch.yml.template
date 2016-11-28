@@ -1,0 +1,6 @@
+path:
+  data: DATA_DIRECTORY/data
+  logs: DATA_DIRECTORY/log
+  scripts: DATA_DIRECTORY/scripts
+http.cors.enabled: true
+http.cors.allow-origin: "/.*/"

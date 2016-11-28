@@ -98,46 +98,11 @@ teardown() {
   ! [[ "$output" =~ "tagline"  ]]
 }
 
-@test "It should disable multicast cluster discovery in config" {
-  initialize_elasticsearch
-  run grep "discovery.zen.ping.multicast.enabled" /elasticsearch/config/elasticsearch.yml
-  [[ "$output" =~ "false" ]]
-}
-
 @test "It should not send multicast discovery ping requests" {
   initialize_elasticsearch
   run timeout 5 elasticsearch-wrapper -Des.logger.discovery=TRACE
   ! [[ "$output" =~ "sending ping request" ]]
   ! [[ "$output" =~ "multicast" ]]
-}
-
-@test "It should support compatible --dump and --restore commands" {
-  url="http://aptible:password@localhost"
-  dump="${BATS_TEST_DIRNAME}/dump-file"
-
-  initialize_elasticsearch
-  wait_for_elasticsearch
-
-  curl -s -XPUT "http://localhost:9200/tests/test/1" -d'{
-    "testId": 1,
-    "testValue": "TEST_VALUE"
-  }'
-  curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
-
-  # We have to repeat the dump a few times, because it originally
-  # comes out empty (most likely a question of timing).
-  until [[ -s "$dump" ]]; do
-    run-database.sh --dump "$url" > "$dump"
-  done
-
-  teardown
-  setup
-
-  initialize_elasticsearch
-  wait_for_elasticsearch
-
-  run-database.sh --restore "$url" < "$dump"
-  curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
 }
 
 @test "It should exit when ES exits (or is killed) and report the exit code" {
@@ -184,4 +149,54 @@ teardown() {
   ES_HEAP_SIZE=512m wait_for_elasticsearch
   run ps auxwww
   [[ "$output" =~ "-Xms512m -Xmx512m" ]]
+}
+
+@test "It should autoconfigure ES_HEAP_SIZE based on APTIBLE_CONTAINER_SIZE" {
+  initialize_elasticsearch
+  APTIBLE_CONTAINER_SIZE=1024 wait_for_elasticsearch
+  run ps auxwww
+  [[ "$output" =~ "-Xms512m -Xmx512m" ]]
+}
+
+@test "It should support compatible --dump and --restore commands" {
+  if dpkg --compare-versions "$ES_VERSION" ge 5; then
+    skip "Not supported yet on ${ES_VERSION}"
+  fi
+
+  url="http://aptible:password@localhost"
+  dump="${BATS_TEST_DIRNAME}/dump-file"
+
+  initialize_elasticsearch
+  wait_for_elasticsearch
+
+  curl -s -XPUT "http://localhost:9200/tests/test/1" -d'{
+    "testId": 1,
+    "testValue": "TEST_VALUE"
+  }'
+  curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
+
+  # We have to repeat the dump a few times, because it originally
+  # comes out empty (most likely a question of timing).
+  until [[ -s "$dump" ]]; do
+    run-database.sh --dump "$url" > "$dump"
+  done
+
+  teardown
+  setup
+
+  initialize_elasticsearch
+  wait_for_elasticsearch
+
+  run-database.sh --restore "$url" < "$dump"
+  curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
+}
+
+@test "It should disable multicast cluster discovery in config" {
+  if dpkg --compare-versions "$ES_VERSION" ge 5; then
+    skip "Not needed on ${ES_VERSION}"
+  fi
+
+  initialize_elasticsearch
+  run grep "discovery.zen.ping.multicast.enabled" /elasticsearch/config/elasticsearch.yml
+  [[ "$output" =~ "false" ]]
 }
