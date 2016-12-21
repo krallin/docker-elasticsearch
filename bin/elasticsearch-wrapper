@@ -11,7 +11,7 @@ elif [[ -n "${APTIBLE_CONTAINER_SIZE:-}" ]]; then
   # caches.
   # https://www.elastic.co/guide/en/elasticsearch/guide/current/heap-sizing.html
   ES_HEAP_SIZE="$((APTIBLE_CONTAINER_SIZE / 2))m"
-  echo "ES_HEAP_SIZE is defauling to to ${ES_HEAP_SIZE}"
+  echo "ES_HEAP_SIZE is defaulting to to ${ES_HEAP_SIZE}"
 fi
 
 if [[ -n "${ES_HEAP_SIZE:-}" ]]; then
