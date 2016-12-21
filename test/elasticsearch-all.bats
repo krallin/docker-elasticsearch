@@ -8,9 +8,9 @@ wait_for_elasticsearch() {
   # We pass the ES_PID via a global variable because we can't rely on
   # $(wait_for_elasticsearch) as it would result in orpahning the ES process
   # (which makes us unable to `wait` it).
-  run-database.sh "$@" > $BATS_TEST_DIRNAME/nginx.log 2>&1 &
+  run-database.sh "$@" >> "$ES_LOG" 2>&1 &
   ES_PID="$!"
-  while ! grep -q "started" $BATS_TEST_DIRNAME/nginx.log 2>/dev/null; do
+  while ! grep -q "started" "$ES_LOG" 2>/dev/null; do
     sleep 0.1
   done
 }
@@ -20,6 +20,7 @@ setup() {
   export OLD_SSL_DIRECTORY="$SSL_DIRECTORY"
   export DATA_DIRECTORY=/tmp/datadir
   export SSL_DIRECTORY=/tmp/ssldir
+  export ES_LOG="$BATS_TEST_DIRNAME/elasticsearch.log"
   rm -rf "$DATA_DIRECTORY"
   rm -rf "$SSL_DIRECTORY"
   mkdir -p "$DATA_DIRECTORY"
@@ -45,6 +46,10 @@ teardown() {
   export SSL_DIRECTORY="$OLD_SSL_DIRECTORY"
   unset OLD_DATA_DIRECTORY
   unset OLD_SSL_DIRECTORY
+  echo "---- BEGIN LOGS ----"
+  cat "$ES_LOG" || true
+  echo "---- END LOGS ----"
+  rm -f "$ES_LOG"
 }
 
 @test "It should provide an HTTP wrapper" {
@@ -70,16 +75,30 @@ teardown() {
   [[ "$output" =~ "tagline"  ]]
 }
 
-@test "It should allow the SSL certificate and key to be configured via ENV" {
+@test "It should allow the SSL certificate and key to be configured via ENV at --initialize" {
+  # This tests both that we accept a cert at --initialize, and use a cert from
+  # the filesystem at runtime
   mkdir /tmp/cert
   openssl req -x509 -batch -nodes -newkey rsa:2048 -keyout /tmp/cert/server.key \
     -out /tmp/cert/server.crt -subj /CN=elasticsearch-bats-test.com
-  export SSL_CERTIFICATE="$(cat /tmp/cert/server.crt)"
-  export SSL_KEY="$(cat /tmp/cert/server.key)"
-  rm -rf /tmp/cert
-  initialize_elasticsearch
+
+  SSL_CERTIFICATE="$(cat /tmp/cert/server.crt)" SSL_KEY="$(cat /tmp/cert/server.key)" initialize_elasticsearch
   wait_for_elasticsearch
+
   curl -kv https://localhost 2>&1 | grep "CN=elasticsearch-bats-test.com"
+  rm -rf /tmp/cert
+}
+
+@test "It should allow the SSL certificate and key to be configured via ENV at runtime" {
+  mkdir /tmp/cert
+  openssl req -x509 -batch -nodes -newkey rsa:2048 -keyout /tmp/cert/server.key \
+    -out /tmp/cert/server.crt -subj /CN=elasticsearch-bats-test.com
+
+  initialize_elasticsearch
+  SSL_CERTIFICATE="$(cat /tmp/cert/server.crt)" SSL_KEY="$(cat /tmp/cert/server.key)" wait_for_elasticsearch
+
+  curl -kv https://localhost 2>&1 | grep "CN=elasticsearch-bats-test.com"
+  rm -rf /tmp/cert
 }
 
 @test "It should reject unauthenticated requests with Basic Auth enabled over HTTP" {
