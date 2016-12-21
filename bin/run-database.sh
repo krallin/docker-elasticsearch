@@ -53,7 +53,10 @@ elif [[ "$1" == "--initialize" ]]; then
   setup_runtime_configuration
   htpasswd -b -c "${DATA_DIRECTORY}/auth_basic.htpasswd" "${USERNAME:-aptible}" "$PASSPHRASE"
 
-  es_dirs=("${DATA_DIRECTORY}/data" "${DATA_DIRECTORY}/log" "${DATA_DIRECTORY}/work" "${DATA_DIRECTORY}/scripts" "/elasticsearch/config")
+  # WARNING: Don't touch any directory that's not on DATA_DIRECTORY or
+  # SSL_DIRECTORY here: your changes wouldn't be persisted from --initialize to
+  # runtime.
+  es_dirs=("${DATA_DIRECTORY}/data" "${DATA_DIRECTORY}/log" "${DATA_DIRECTORY}/work" "${DATA_DIRECTORY}/scripts")
   mkdir -p "${es_dirs[@]}"
   chown -R "${ES_USER}:${ES_GROUP}" "${es_dirs[@]}"
 
