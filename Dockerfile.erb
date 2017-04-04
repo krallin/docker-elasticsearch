@@ -25,9 +25,11 @@ ENV ES_VERSION <%= ENV.fetch 'ES_VERSION' %>
 ENV ES_SHA1SUM <%= ENV.fetch 'ES_SHA1SUM' %>
 ENV ES_BACKUP_PLUGIN <%= ENV.fetch 'ES_BACKUP_PLUGIN' %>
 
+# Plugin wrapper for ES compatibility
+ADD bin/plugin-install-wrapper /usr/bin/plugin-install-wrapper
+
 RUN NEW_REPO="https://artifacts.elastic.co/downloads/elasticsearch" \
  && OLD_REPO="https://download.elasticsearch.org/elasticsearch/elasticsearch" \
- && PLUGIN="$(dpkg --compare-versions "$ES_VERSION" ge 5 && printf elasticsearch-plugin || printf plugin)" \
  && REPO="$(dpkg --compare-versions "$ES_VERSION" ge 5 && printf "$NEW_REPO" || printf "$OLD_REPO" )" \
  && cd /tmp \
  && curl -fsSLO "${REPO}/elasticsearch-${ES_VERSION}.tar.gz" \
@@ -35,8 +37,8 @@ RUN NEW_REPO="https://artifacts.elastic.co/downloads/elasticsearch" \
  && tar xf "elasticsearch-${ES_VERSION}.tar.gz" \
  && rm "elasticsearch-${ES_VERSION}.tar.gz" \
  && mv "elasticsearch-${ES_VERSION}" /elasticsearch \
- && "/elasticsearch/bin/${PLUGIN}" install <%= '--batch' if ENV.fetch('TAG').start_with? '2.' %> "${ES_BACKUP_PLUGIN}" \
- && chown -R "${ES_USER}:${ES_GROUP}" "/elasticsearch/config"
+ && chown -R "${ES_USER}:${ES_GROUP}" "/elasticsearch/config" \
+ && plugin-install-wrapper "$ES_BACKUP_PLUGIN"
 
 # Install node.js and elasticdump tool for --dump/--restore options.
 # https://github.com/taskrabbit/elasticsearch-dump
@@ -62,7 +64,7 @@ ADD <%= ENV.fetch 'TAG' %>/templates/elasticsearch.yml.template /elasticsearch/c
 RUN rm /etc/nginx/nginx.conf
 RUN rm /elasticsearch/config/elasticsearch.yml
 
-# Wrappers
+# Additional wrappers
 ADD bin/cluster-wrapper /usr/bin/cluster-wrapper
 ADD bin/nginx-wrapper /usr/bin/nginx-wrapper
 ADD bin/elasticsearch-wrapper /usr/bin/elasticsearch-wrapper

@@ -1,0 +1,27 @@
+#!/bin/bash
+set -o errexit
+set -o nounset
+
+if [[ ! "$#" -eq 1 ]]; then
+  echo "Usage: $0 PLUGIN"
+  exit 1
+fi
+
+if dpkg --compare-versions "$ES_VERSION" ge 5; then
+  CMD=elasticsearch-plugin
+  ARGS=("install" "--batch" "$1")
+elif dpkg --compare-versions "$ES_VERSION" ge 2; then
+  CMD=plugin
+  ARGS=("install" "--batch" "$1")
+else
+  CMD=plugin
+  ARGS=(install "$1")
+fi
+
+"/elasticsearch/bin/${CMD}" "${ARGS[@]}"
+
+PLUGIN_DIR="/elasticsearch/config/${1}"
+
+if [[ -d "$PLUGIN_DIR" ]]; then
+  chown -R "${ES_USER}:${ES_GROUP}" "$PLUGIN_DIR"
+fi
