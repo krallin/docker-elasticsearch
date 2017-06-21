@@ -1,7 +1,7 @@
-export ES_VERSION = 2.4.3
-export ES_SHA1SUM = 7f415b3598315c017b0733f50cd47aa837886a7f
+export ES_VERSION = 2.4.5
+export ES_SHA1SUM = 180353a1a65995f5e4533ff0a58f18e1e85f28ae
 export ES_BACKUP_PLUGIN = cloud-aws
 export ES_USER = elasticsearch
 export ES_GROUP = elasticsearch
 
-export JAVA_VERSION = 7
+export JAVA_VERSION = 8
