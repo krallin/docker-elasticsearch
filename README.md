@@ -25,7 +25,6 @@ The first command sets up a data container named `data` which will hold the conf
 * `2.4`: Elasticsearch 2.4.5
 * `2.2`: Elasticsearch 2.2.1
 * `1.5`: Elasticsearch 1.5.2
-* `1.3`: Elasticsearch 1.3.2
 
 ## Tests
 
