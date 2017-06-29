@@ -32,6 +32,18 @@ if [[ -n "${ES_HEAP_SIZE:-}" ]]; then
   fi
 fi
 
+# Install any user specified plugins
+
+if [[ -n "${ES_PLUGINS:-}" ]]; then
+  for PLUGIN in $ES_PLUGINS; do
+    if [[ -d "/elasticsearch/plugins/${PLUGIN}" ]]; then
+      echo "${PLUGIN} is already installed"
+    else
+      plugin-install-wrapper "$PLUGIN"
+    fi
+  done
+fi
+
 # Finally, if ELASTICSEARCH_XPACK is set, then install the X-Pack. We don't
 # currently allow relying on the X-Pack for authentication (since we have Nginx
 # in front), but could so here if there is demand.
