@@ -8,3 +8,8 @@
 @test "It should have the cloud-aws plugin installed" {
   /elasticsearch/bin/plugin --list | grep -q "cloud-aws"
 }
+
+@test "It should have JRE 7 installed" {
+  run java -version
+  [[ "$output" =~ "1.7" ]]
+}

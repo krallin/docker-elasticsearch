@@ -63,7 +63,3 @@ docker run -d --name="$DB_CONTAINER" \
 for PLUGIN in $PLUGINS; do
   wait_for_plugin "$PLUGIN"
 done
-
-echo "Destroying"
-docker stop "$DB_CONTAINER"
-docker rm "$DB_CONTAINER"
