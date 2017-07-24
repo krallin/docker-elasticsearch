@@ -11,10 +11,8 @@ RUN apt-install software-properties-common apache2-utils sudo curl
 
 # Install Java and clean up
 ENV JAVA_VERSION <%= ENV.fetch 'JAVA_VERSION' %>
-RUN echo "oracle-java${JAVA_VERSION}-installer shared/accepted-oracle-license-v1-1 " \
-         "select true" | debconf-set-selections && \
-    add-apt-repository -y ppa:webupd8team/java && \
-    apt-install "oracle-java${JAVA_VERSION}-installer"
+RUN add-apt-repository -y ppa:openjdk-r/ppa && \
+    apt-install "openjdk-${JAVA_VERSION}-jre"
 
 # Install NGiNX
 RUN add-apt-repository -y ppa:nginx/stable && \

@@ -56,22 +56,22 @@ teardown() {
   initialize_elasticsearch
   rm "$DATA_DIRECTORY/auth_basic.htpasswd"  # Disable auth for this test
   wait_for_elasticsearch
-  run wget -qO- http://localhost > "${BATS_TEST_DIRNAME}/test-output"
-  run wget -qO- http://localhost
+  run curl  http://localhost > "${BATS_TEST_DIRNAME}/test-output"
+  run curl http://localhost
   [[ "$output" =~ "tagline"  ]]
 }
 
 @test "It should expose Elasticsearch over HTTP with Basic Auth" {
   initialize_elasticsearch
   wait_for_elasticsearch
-  run wget -qO- http://aptible:password@localhost
+  run curl http://aptible:password@localhost
   [[ "$output" =~ "tagline"  ]]
 }
 
 @test "It should expose Elasticsearch over HTTPS with Basic Auth" {
   initialize_elasticsearch
   wait_for_elasticsearch
-  run wget -qO- --no-check-certificate https://aptible:password@localhost
+  run curl -k https://aptible:password@localhost
   [[ "$output" =~ "tagline"  ]]
 }
 
@@ -104,17 +104,17 @@ teardown() {
 @test "It should reject unauthenticated requests with Basic Auth enabled over HTTP" {
   initialize_elasticsearch
   wait_for_elasticsearch
-  run wget -qO- http://localhost
-  [ "$status" -ne "0" ]
-  ! [[ "$output" =~ "tagline"  ]]
+  run curl --fail http://localhost
+  [[ "$status" -eq 22 ]]  # CURLE_HTTP_RETURNED_ERROR - https://curl.haxx.se/libcurl/c/libcurl-errors.html
+  [[ "$output" =~ "401 Unauthorized"  ]]
 }
 
 @test "It should reject unauthenticated requests with Basic Auth enabled over HTTPS" {
   initialize_elasticsearch
   wait_for_elasticsearch
-  run wget -qO- --no-check-certificate https://localhost
-  [ "$status" -ne "0" ]
-  ! [[ "$output" =~ "tagline"  ]]
+  run curl -k --fail https://localhost
+  [[ "$status" -eq 22 ]]  # CURLE_HTTP_RETURNED_ERROR - https://curl.haxx.se/libcurl/c/libcurl-errors.html
+  [[ "$output" =~ "401 Unauthorized"  ]]
 }
 
 @test "It should not send multicast discovery ping requests" {
