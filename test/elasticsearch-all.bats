@@ -177,39 +177,6 @@ teardown() {
   [[ "$output" =~ "-Xms512m -Xmx512m" ]]
 }
 
-@test "It should support compatible --dump and --restore commands" {
-  if dpkg --compare-versions "$ES_VERSION" ge 5; then
-    skip "Not supported yet on ${ES_VERSION}"
-  fi
-
-  url="http://aptible:password@localhost"
-  dump="${BATS_TEST_DIRNAME}/dump-file"
-
-  initialize_elasticsearch
-  wait_for_elasticsearch
-
-  curl -s -XPUT "http://localhost:9200/tests/test/1" -d'{
-    "testId": 1,
-    "testValue": "TEST_VALUE"
-  }'
-  curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
-
-  # We have to repeat the dump a few times, because it originally
-  # comes out empty (most likely a question of timing).
-  until [[ -s "$dump" ]]; do
-    run-database.sh --dump "$url" > "$dump"
-  done
-
-  teardown
-  setup
-
-  initialize_elasticsearch
-  wait_for_elasticsearch
-
-  run-database.sh --restore "$url" < "$dump"
-  curl -s "http://localhost:9200/tests/test/1" | grep "TEST_VALUE"
-}
-
 @test "It should disable multicast cluster discovery in config" {
   if dpkg --compare-versions "$ES_VERSION" ge 5; then
     skip "Not needed on ${ES_VERSION}"

@@ -3,7 +3,9 @@ set -o errexit
 set -o nounset
 
 # ES no longer allows AWS creds to be be passed via request when creating
-# a backup respository, but we'd rather keep doing that, anyways.
+# a backup respository, but we need to continue doing so since the new way:
+# * requires shell access to modify the filesystem
+# * cannot be updated at runtime
 if dpkg --compare-versions "$ES_VERSION" ge 6; then
   export ES_JAVA_OPTS="-Des.allow_insecure_settings=true ${ES_JAVA_OPTS:-}"
 fi
